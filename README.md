@@ -5,6 +5,7 @@ An AI-powered simulation of a creative agency team building websites autonomousl
 ## What it does
 
 Give the team a one-line prompt like "build a brutalist portfolio site" and watch them:
+
 - Expand it into a detailed brief (Kevin, Product Manager)
 - Generate design mockups and moodboards (Ramona, Art Director)
 - Write production-ready HTML/CSS/JS (Rich, Engineer)
@@ -27,7 +28,7 @@ cp .env.example .env.local  # then add your API key
 npm run dev
 ```
 
-Get a free Gemini API key: https://makersuite.google.com/app/apikey
+Get a Gemini API key: https://aistudio.google.com/app/api-keys
 
 ## Features
 

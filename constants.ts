@@ -1,4 +1,5 @@
 
+
 import { Character, WindowState, WindowId } from './types';
 
 export const CHARACTERS: Record<string, Character> = {
@@ -8,7 +9,7 @@ export const CHARACTERS: Record<string, Character> = {
     role: 'Head of Product',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kevin&backgroundColor=b6e3f4&eyebrows=worried&mouth=serious',
     color: 'bg-blue-50 text-blue-700 border-blue-200',
-    bio: 'Deeply anxious about "scope creep". Speaks in corporate metaphors he doesn\'t fully understand. Secretly terrified Rich will quit.'
+    bio: 'Deeply anxious about "scope creep". Speaks in corporate metaphors. Obsessed with the Kanban board. His superpower is turning a 1-sentence prompt into a detailed PRD. Always prioritizes "MVP" but secretly wants to be cool.'
   },
   ramona: {
     id: 'ramona',
@@ -16,15 +17,15 @@ export const CHARACTERS: Record<string, Character> = {
     role: 'Art Director',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ramona&backgroundColor=ffdfbf&style=circle&topType=LongHairBob&accessories=glasses',
     color: 'bg-purple-50 text-purple-700 border-purple-200',
-    bio: 'Avant-garde visionary. Hates "user friendly" if it means "ugly". Finds inspiration in mold, brutalism, and 90s anime.'
+    bio: 'Avant-garde visionary. Hates "user friendly" if it means "ugly". Finds inspiration in brutalism, print design, and 90s anime. Will not let Rich code until the vibe is correct. Demands at least 3 mockups before a single div is rendered.'
   },
   rich: {
     id: 'rich',
     name: 'Rich',
-    role: 'Creative Technologist',
+    role: 'Design Engineer',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rich&backgroundColor=c0aede&facialHair=beardMajestic&topType=ShortHairDreads01',
     color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    bio: '10x Developer. Thinks React is "too heavy" and writes raw WebGL shaders. Arrogant but undeniably brilliant. Hates meetings.'
+    bio: 'A God-Tier Creative Developer. 10x Engineer. Obsessed with WebGL, shaders, and frame rates. Writes code that looks like poetry. Thinks React is "too heavy" but uses it anyway. Believes a website is never finished, only abandoned. Constantly iterating.'
   },
   nonsense: {
     id: 'nonsense',
@@ -32,7 +33,7 @@ export const CHARACTERS: Record<string, Character> = {
     role: 'Growth Hacker',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Nonsense&backgroundColor=ffdfbf&topType=WinterHat4&accessories=sunglasses',
     color: 'bg-orange-50 text-orange-700 border-orange-200',
-    bio: 'Terminally online. Obsessed with "dopamine loops" and "narrative". Speaks entirely in internet slang and crypto-bro dialiect.'
+    bio: 'Terminally online. Obsessed with "dopamine loops" and "narrative". Speaks entirely in internet slang and crypto-bro dialiect. Writes copy that converts.'
   },
   marc: {
     id: 'marc',
@@ -40,7 +41,7 @@ export const CHARACTERS: Record<string, Character> = {
     role: 'Intern',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Marc&backgroundColor=d1d4f9&clothing=hoodie',
     color: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    bio: 'Trying his best. Uses AI for everything. Constantly accidentally deleting production databases. Just happy to be here.'
+    bio: 'Trying his best. Uses AI for everything. Generates weird images. Just happy to be here. The designated "Mockup Generator".'
   },
   system: {
     id: 'system',
@@ -95,7 +96,7 @@ export const INITIAL_HTML = `
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
         body { 
             font-family: 'Space Grotesk', sans-serif; 
-            background-color: #0f0f0f;
+            background-color: #050505;
             color: #e5e5e5;
             display: flex;
             flex-direction: column;
@@ -125,10 +126,10 @@ export const INITIAL_HTML = `
         
         .status {
             margin-top: 20px;
-            font-size: 12px;
+            font-size: 10px;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
-            opacity: 0.5;
+            letter-spacing: 0.2em;
+            opacity: 0.4;
             animation: pulse 2s infinite;
         }
         @keyframes pulse { 50% { opacity: 0.2; } }
@@ -137,18 +138,18 @@ export const INITIAL_HTML = `
 <body>
     <div class="loader">
         <div class="spinner"></div>
-        <div class="status">Waiting for Rich to deploy...</div>
+        <div class="status">Waiting for Rich to cook...</div>
     </div>
 </body>
 </html>
 `;
 
 export const DEFAULT_PROMPTS = [
-  "A high-end, brutalist landing page for a luxury architectural firm called 'MONOLITH'.",
-  "A chaotic, Gen-Z energy drink brand called 'HYPER-JUICE' with glitch effects.",
-  "A serene, minimalist portfolio for a Japanese ceramicist using beige tones and serif fonts.",
-  "A cyberpunk dashboard for a crypto trading bot called '0xTrade' with neon accents.",
-  "An interactive 3D product showcase for a transparent tech gadget called 'GHOST'."
+  "A brutalist, monochromatic portfolio for a fashion house called 'VOID' that uses large typography and scroll-triggered reveals.",
+  "A retro-futuristic dashboard for a space mining corp called 'HELION'. Neon oranges, grid lines, and data visualization.",
+  "An ethereal, calming landing page for a meditation app called 'OOM'. Soft gradients, blur effects, and floating elements.",
+  "A high-energy, glitch-art promotional site for a cyberpunk rave called 'NEURO-DANCE'. Strobe effects and aggressive typography.",
+  "A clean, swiss-style layout for an architectural firm. Grid-based, heavy use of whitespace, and smooth page transitions."
 ];
 
 export const PRESET_EVENTS = [

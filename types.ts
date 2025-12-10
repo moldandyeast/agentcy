@@ -1,4 +1,5 @@
 
+
 export type CharacterId = 'kevin' | 'ramona' | 'rich' | 'nonsense' | 'marc' | 'system';
 
 export interface Character {
@@ -10,7 +11,7 @@ export interface Character {
   bio: string;
 }
 
-export type WindowId = 'chat' | 'live' | 'code' | 'board' | 'brief' | 'moodboard' | 'music';
+export type WindowId = 'chat' | 'live' | 'code' | 'board' | 'brief' | 'moodboard' | 'music' | 'tictactoe';
 export type TabId = 'brief' | 'moodboard' | 'board' | 'code' | 'live';
 export type ViewportMode = 'responsive' | '1080p' | '1440p' | '4k';
 

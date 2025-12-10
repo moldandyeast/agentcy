@@ -1,4 +1,6 @@
 
+
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AgencyState, Message, Task, MoodboardItem, DirectorAction, WindowId, WindowState, AppNotification } from './types';
 import { INITIAL_HTML, DEFAULT_PROMPTS, PRESET_EVENTS, INITIAL_WINDOWS, CHARACTERS } from './constants';
@@ -15,6 +17,7 @@ import { BriefDoc } from './components/BriefDoc';
 import { Moodboard } from './components/Moodboard';
 import { MusicPlayer } from './components/MusicPlayer';
 import { NotificationSystem } from './components/NotificationSystem';
+import { TicTacToe } from './components/TicTacToe';
 
 const App: React.FC = () => {
   // Modal States
@@ -632,6 +635,17 @@ const App: React.FC = () => {
                     toggleSfxMute={toggleSfxMute}
                 />
             </WindowFrame>
+
+            <WindowFrame 
+                windowState={state.windows.tictactoe} 
+                isActive={state.activeWindowId === 'tictactoe'}
+                onFocus={() => focusWindow('tictactoe')}
+                onClose={() => closeWindow('tictactoe')}
+                onMove={moveWindow}
+                onScale={(f) => handleWindowScale('tictactoe', f)}
+            >
+                <TicTacToe />
+            </WindowFrame>
         </div>
 
         {/* CURSOR LAYER */}
@@ -655,6 +669,7 @@ const App: React.FC = () => {
                         {id === 'board' && <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>}
                         {id === 'moodboard' && <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>}
                         {id === 'music' && <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>}
+                        {id === 'tictactoe' && <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18M10 3v18M14 3v18" /></svg>}
                     </div>
                     {win.isOpen && <div className="absolute -bottom-2 w-1 h-1 bg-blue-400 rounded-full shadow-[0_0_5px_rgba(59,130,246,0.8)]"></div>}
                  </button>

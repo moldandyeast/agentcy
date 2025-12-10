@@ -1,5 +1,7 @@
 
 
+
+
 import { Character, WindowState, WindowId } from './types';
 
 export const CHARACTERS: Record<string, Character> = {
@@ -81,6 +83,10 @@ export const INITIAL_WINDOWS: Record<WindowId, WindowState> = {
   music: {
     id: 'music', title: 'Winamp',
     x: 60, y: 500, width: 320, height: 320, zIndex: 20, isOpen: true, scale: 1
+  },
+  tictactoe: {
+    id: 'tictactoe', title: 'Tic-Tac-Toe',
+    x: 150, y: 200, width: 340, height: 460, zIndex: 30, isOpen: false, scale: 1
   }
 };
 

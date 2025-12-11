@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { AgencyState, DirectorAction, CharacterId, Task } from "../types";
 import { CHARACTERS } from "../constants";
@@ -59,9 +60,8 @@ const determineStrategy = (state: AgencyState): Strategy => {
     const doingTasks = state.tasks.filter(t => t.status === 'doing');
     const doneTasks = state.tasks.filter(t => t.status === 'done');
     
-    const isBriefShort = state.brief.length < 400; // Expanded briefs are usually long
+    const isBriefShort = state.brief.length < 200; 
     const hasInspiration = state.moodboard.length >= 2;
-    const hasTasks = state.tasks.length > 0;
     const isWorking = doingTasks.length > 0;
 
     // 1. BRIEFING PHASE: Kevin expands the user prompt into a PRD
@@ -118,24 +118,134 @@ const determineStrategy = (state: AgencyState): Strategy => {
         };
     }
 
-    // 3. PLANNING PHASE: Kevin populates the board
-    if (!hasTasks || (todoTasks.length === 0 && !isWorking)) {
-        const completedCount = doneTasks.length;
-        let phaseName = "Foundation";
-        let suggestions = "Hero Section, Navigation, Responsive Grid, Typography Setup";
+    // 3. EXECUTION PHASE: Multi-Agent Work Loop
+    if (isWorking) {
+        const currentTask = doingTasks[0];
+        const title = currentTask.title.toLowerCase();
+        const isFirstBuild = state.htmlContent.includes("Waiting for Rich");
 
-        if (completedCount > 3) { phaseName = "Content"; suggestions = "Feature Section, Bento Grid, About Text"; }
-        if (completedCount > 6) { phaseName = "Motion"; suggestions = "GSAP Animations, Hover Effects, Smooth Scroll"; }
+        // --- SUB-AGENT: 0xNonSense (Copywriting) ---
+        if (title.includes('copy') || title.includes('text') || title.includes('write') || title.includes('content')) {
+             return {
+                phase: 'EXECUTION',
+                speaker: 'nonsense',
+                forcedAction: 'update_code',
+                model: 'gemini-2.5-flash', // Flash is fine for copy
+                context: `You are 0xNonSense (Growth Hacker). You are working on the task: "${currentTask.title}".
+                          Your job is to inject "viral", "hype", or "narrative-driven" copy into the HTML.
+                          Replace boring lorem ipsum with something that sounds like a Gen-Z innovative startup.
+                          Use slang like "based", "locked in", "shipping".
+                          Update the HTML content with your new text.`,
+                schema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        speaker: { type: Type.STRING, enum: ['nonsense'] },
+                        message: { type: Type.STRING },
+                        thinking: { type: Type.STRING },
+                        action: { type: Type.STRING, enum: ['update_code'] },
+                        actionPayload: { 
+                            type: Type.OBJECT, 
+                            properties: { content: { type: Type.STRING } },
+                            required: ['content'] 
+                        }
+                    },
+                    required: ['speaker', 'message', 'action', 'actionPayload']
+                }
+            };
+        }
+
+        // --- SUB-AGENT: Marc (Visuals/Mockups) ---
+        if (title.includes('mockup') || title.includes('image') || title.includes('visual') || title.includes('icon') || title.includes('asset')) {
+            return {
+                phase: 'EXECUTION',
+                speaker: 'marc',
+                forcedAction: 'generate_image',
+                model: 'gemini-2.5-flash',
+                context: `You are Marc (The Intern). You are working on: "${currentTask.title}".
+                          Generate a prompt for an image/asset that fits this task.
+                          You use AI for everything. Make the prompt weird but cool.
+                          Tell the team you "cooked this up".`,
+                schema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        speaker: { type: Type.STRING, enum: ['marc'] },
+                        message: { type: Type.STRING },
+                        thinking: { type: Type.STRING },
+                        action: { type: Type.STRING, enum: ['generate_image'] },
+                        actionPayload: { 
+                            type: Type.OBJECT, 
+                            properties: { prompt: { type: Type.STRING } },
+                            required: ['prompt'] 
+                        }
+                    },
+                    required: ['speaker', 'message', 'action', 'actionPayload']
+                }
+            };
+        }
+
+        // --- SUB-AGENT: Rich (Engineering) ---
+        // Default handler for code, fix, build, feature
+        return {
+            phase: 'EXECUTION',
+            speaker: 'rich',
+            forcedAction: 'update_code',
+            model: 'gemini-3-pro-preview', // Pro for code
+            context: isFirstBuild 
+                ? `URGENT: INITIAL SCAFFOLDING. Replace the spinner with a full HTML5 landing page.
+                   Task: ${currentTask.title}.
+                   Requirements: Tailwind CSS, Inter Font, Dark Mode, Hero Section, Navigation.
+                   Output the FULL content.`
+                : `You are working on task: "${currentTask.title}".
+                   Update the existing HTML to implement this feature.
+                   Do not delete other sections unless necessary. Iterate on the design.
+                   Make it Awwwards-level quality.`,
+            schema: {
+                type: Type.OBJECT,
+                properties: {
+                    speaker: { type: Type.STRING, enum: ['rich'] },
+                    message: { type: Type.STRING },
+                    thinking: { type: Type.STRING },
+                    action: { type: Type.STRING, enum: ['update_code'] },
+                    actionPayload: { 
+                        type: Type.OBJECT, 
+                        properties: { content: { type: Type.STRING } },
+                        required: ['content'] 
+                    }
+                },
+                required: ['speaker', 'message', 'action', 'actionPayload']
+            }
+        };
+    }
+
+    // 4. PLANNING PHASE: Kevin populates the board
+    if (todoTasks.length < 3) {
+        const completedCount = doneTasks.length;
+        
+        // Context for what kind of tasks needed
+        let suggestion = "";
+        if (completedCount === 0) {
+            suggestion = "Create the initial 'Feat: Hero Section' task for Rich.";
+        } else {
+            // Randomly suggest a specialized task to keep the whole team involved
+            const roll = Math.random();
+            if (roll < 0.33) {
+                suggestion = "Create a 'Copy: [Section Name]' task for 0xNonSense to write viral text.";
+            } else if (roll < 0.66) {
+                suggestion = "Create a 'Visual: [Asset Name]' task for Marc to generate a mockup/image.";
+            } else {
+                suggestion = "Create a 'Feat: [Component]' or 'Fix: [Issue]' task for Rich.";
+            }
+        }
 
         return {
             phase: 'PLANNING',
             speaker: 'kevin',
             forcedAction: 'add_task',
             model: 'gemini-2.5-flash',
-            context: `We are in the **${phaseName}** phase. The Kanban board is empty. 
-                      Create a technical task to move the project forward. 
-                      Suggestions: ${suggestions}. 
-                      Make the title specific (e.g., 'Implement Hero GSAP Animation').`,
+            context: `The backlog is low. You are the PM.
+                      ${suggestion}
+                      IMPORTANT: Use prefixes 'Feat:', 'Fix:', 'Copy:', or 'Visual:' so the team knows who does what.
+                      Keep the team busy.`,
             schema: {
                 type: Type.OBJECT,
                 properties: {
@@ -156,59 +266,29 @@ const determineStrategy = (state: AgencyState): Strategy => {
         };
     }
 
-    // 4. EXECUTION PHASE: Rich codes the active task
-    if (isWorking) {
-        const currentTask = doingTasks[0];
-        const isFirstBuild = state.htmlContent.includes("Waiting for Rich");
-        
-        return {
-            phase: 'EXECUTION',
-            speaker: 'rich',
-            forcedAction: 'update_code',
-            model: 'gemini-3-pro-preview', // Use Pro for coding
-            context: isFirstBuild 
-                ? `URGENT: INITIAL SCAFFOLDING. Replace the spinner with a full HTML5 landing page.
-                   Task: ${currentTask.title}.
-                   Requirements: Tailwind CSS, Inter Font, Dark Mode, Hero Section, Navigation.
-                   Output the FULL content.`
-                : `You are working on task: "${currentTask.title}".
-                   Update the existing HTML to implement this feature.
-                   Do not delete other sections. Iterate on the design.
-                   Make it Awwwards-level quality.`,
-            schema: {
-                type: Type.OBJECT,
-                properties: {
-                    speaker: { type: Type.STRING, enum: ['rich'] },
-                    message: { type: Type.STRING },
-                    thinking: { type: Type.STRING }, // Rich needs to think
-                    action: { type: Type.STRING, enum: ['update_code'] },
-                    actionPayload: { 
-                        type: Type.OBJECT, 
-                        properties: { content: { type: Type.STRING } },
-                        required: ['content'] 
-                    }
-                },
-                required: ['speaker', 'message', 'action', 'actionPayload']
-            }
-        };
-    }
-
-    // 5. REVIEW/PICK PHASE: Rich picks up the next task
-    // If we have ToDos but nothing Doing, Rich picks one up.
+    // 5. REVIEW/PICK PHASE: Assigning work
     if (todoTasks.length > 0) {
-        const nextTask = todoTasks[0];
+        // Find a task and the right person for it
+        const task = todoTasks[0];
+        const title = task.title.toLowerCase();
+        
+        let targetSpeaker: CharacterId = 'rich';
+        if (title.includes('copy') || title.includes('text')) targetSpeaker = 'nonsense';
+        else if (title.includes('visual') || title.includes('mockup') || title.includes('image')) targetSpeaker = 'marc';
+
         return {
             phase: 'REVIEW',
-            speaker: 'rich',
+            speaker: targetSpeaker,
             forcedAction: 'move_task',
             model: 'gemini-2.5-flash',
-            context: `You are ready for the next task: "${nextTask.title}".
-                      Move it from 'todo' to 'doing'. 
-                      Tell the team you are starting.`,
+            context: `You see the task "${task.title}" in TODO.
+                      This looks like a job for YOU.
+                      Move it to 'Doing'.
+                      Make a witty comment about why you are the best person for this specific task.`,
             schema: {
                 type: Type.OBJECT,
                 properties: {
-                    speaker: { type: Type.STRING, enum: ['rich'] },
+                    speaker: { type: Type.STRING, enum: [targetSpeaker] },
                     message: { type: Type.STRING },
                     action: { type: Type.STRING, enum: ['move_task'] },
                     actionPayload: { 
@@ -225,13 +305,13 @@ const determineStrategy = (state: AgencyState): Strategy => {
         };
     }
 
-    // Fallback: Just banter (rarely hit if logic works)
+    // Fallback
     return {
         phase: 'IDLE',
         speaker: 'nonsense',
         forcedAction: 'wait',
         model: 'gemini-2.5-flash',
-        context: "The team is idle. Make a joke about AI taking over.",
+        context: "The team is idle. Roast Kevin for not adding tasks.",
         schema: {
             type: Type.OBJECT,
             properties: {
@@ -250,20 +330,29 @@ export const generateNextTurn = async (
   audioVibe: string = "Silent"
 ): Promise<DirectorAction> => {
   
-  // 1. Event Injection Override
-  if (state.pendingEvent) {
-       // ... (Keep existing logic for event injection if needed, simplified here for robustness)
-  }
-
-  // 2. Determine Strict Strategy
+  // 1. Determine Strict Strategy
   const strategy = determineStrategy(state);
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+  // 2. Chat Vibe Instructions (Sitcom Mode)
+  const BANTER_INSTRUCTION = `
+    TONE & STYLE:
+    - This is a workplace sitcom. 
+    - 0xNonSense uses internet slang (fr, ong, based, lfg).
+    - Ramona is pretentiously artistic and critical.
+    - Rich is arrogant and hates "spaghetti code".
+    - Marc is a confused intern trying his best with AI prompts.
+    - Kevin speaks in corporate buzzwords (circle back, synergy).
+    - INTERACT: Reference previous messages. Roast each other playfully.
+  `;
 
   // 3. Construct Prompt
   const systemInstruction = `
     You are ${CHARACTERS[strategy.speaker].name} (${CHARACTERS[strategy.speaker].role}).
     Role Bio: ${CHARACTERS[strategy.speaker].bio}
     
+    ${BANTER_INSTRUCTION}
+
     CURRENT GOAL: ${strategy.phase}
     CONTEXT: ${strategy.context}
     
@@ -275,6 +364,8 @@ export const generateNextTurn = async (
     Project Brief: ${state.brief.slice(0, 500)}...
     Tasks: ${state.tasks.map(t => `${t.id}:${t.title} [${t.status}]`).join(', ')}
     Current HTML Length: ${state.htmlContent.length} chars.
+    Last Speaker: ${state.lastSpeaker}
+    Audio Vibe: ${audioVibe}
     
     GENERATE TURN.
   `;
@@ -290,8 +381,8 @@ export const generateNextTurn = async (
                   systemInstruction: systemInstruction,
                   responseMimeType: "application/json",
                   responseSchema: strategy.schema,
-                  // Only give thinking budget to Rich during execution to save latency
-                  thinkingConfig: strategy.phase === 'EXECUTION' ? { thinkingBudget: 2048 } : undefined
+                  // Only give thinking budget to Rich during coding execution to save latency/cost
+                  thinkingConfig: strategy.speaker === 'rich' && strategy.forcedAction === 'update_code' ? { thinkingBudget: 2048 } : undefined
               }
           });
 
@@ -302,8 +393,8 @@ export const generateNextTurn = async (
                const htmlMatch = response.text.match(/<!DOCTYPE html>[\s\S]*<\/html>/);
                if (htmlMatch) {
                    result = {
-                       speaker: 'rich',
-                       message: "Compiling code...",
+                       speaker: strategy.speaker,
+                       message: "Deploying update...",
                        action: 'update_code',
                        actionPayload: { content: htmlMatch[0] }
                    };
@@ -311,20 +402,26 @@ export const generateNextTurn = async (
           }
 
           if (result) {
-              // Forced Logic Fixes
+              // Forced Logic Fixes for Task IDs
               if (strategy.phase === 'REVIEW' && strategy.forcedAction === 'move_task') {
-                  // Ensure we actually move the correct task
-                  const todo = state.tasks.find(t => t.status === 'todo');
-                  if (todo) {
-                      result.actionPayload.taskId = todo.id;
+                  const targetId = result.actionPayload.taskId;
+                  const validTask = state.tasks.find(t => t.id === targetId && t.status === 'todo');
+                  
+                  if (!validTask) {
+                      const firstTodo = state.tasks.find(t => t.status === 'todo');
+                      if (firstTodo) {
+                           result.actionPayload.taskId = firstTodo.id;
+                           result.actionPayload.column = 'doing';
+                      }
+                  } else {
                       result.actionPayload.column = 'doing';
                   }
               }
 
               return {
                   speaker: strategy.speaker,
-                  message: result.message || "Working...",
-                  thinking: result.thinking || "Processing...",
+                  message: result.message || "...",
+                  thinking: result.thinking || "",
                   emotion: 'working',
                   action: result.action,
                   actionPayload: result.actionPayload
@@ -338,7 +435,7 @@ export const generateNextTurn = async (
 
   return {
       speaker: 'system',
-      message: "Connection interrupted. Retrying packet...",
+      message: "Packet loss detected. Reconnecting...",
       thinking: "Error",
       action: 'wait'
   };

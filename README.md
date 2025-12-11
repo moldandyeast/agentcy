@@ -1,20 +1,46 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# The Agency
 
-# Run and deploy your AI Studio app
+An AI-powered simulation of a creative agency team building websites autonomously. Five AI characters collaborate in real-time—writing briefs, designing mockups, generating code, and managing tasks through chat.
 
-This contains everything you need to run your app locally.
+## What it does
 
-View your app in AI Studio: https://ai.studio/apps/drive/1ELCaVNZ7By8_KZIQpUNDvvJV1ZvYxaba
+Give the team a one-line prompt like "build a brutalist portfolio site" and watch them:
+- Expand it into a detailed brief (Kevin, Product Manager)
+- Generate design mockups and moodboards (Ramona, Art Director)
+- Write production-ready HTML/CSS/JS (Rich, Engineer)
+- Manage tasks on a kanban board
+- Iterate and improve based on team discussion
 
-## Run Locally
+All code renders live in an embedded preview. The interface mimics a desktop OS with draggable windows for chat, code editor, live preview, moodboard, and more.
 
-**Prerequisites:**  Node.js
+## Tech
 
+- **Frontend**: React + TypeScript + Vite + Tailwind
+- **AI**: Google Gemini (2.5-flash for chat, 3-pro for code, flash-image for mockups)
+- **Audio**: Generative lo-fi music via Web Audio API + Tonal.js
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Setup
+
+```bash
+npm install
+cp .env.example .env.local  # then add your API key
+npm run dev
+```
+
+Get a free Gemini API key: https://makersuite.google.com/app/apikey
+
+## Features
+
+- **Autonomous workflow**: AI team follows agency roles (PM → Designer → Engineer)
+- **Real code generation**: Outputs valid HTML that renders in iframe
+- **Director mode**: Inject events like "client wants more animations" mid-session
+- **Generative music**: Lo-fi beats that respond to team activity
+- **Desktop OS interface**: Draggable, resizable windows with dock
+
+## Characters
+
+- **Kevin** (Product): Anxious about scope creep, writes detailed PRDs
+- **Ramona** (Art Director): Refuses to let Rich code without mockups
+- **Rich** (Engineer): 10x developer, obsessed with performance
+- **0xNonSense** (Growth): Writes copy in crypto-bro slang
+- **Marc** (Intern): Generates weird AI images, just happy to be here

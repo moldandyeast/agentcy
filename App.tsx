@@ -184,7 +184,7 @@ const App: React.FC = () => {
     const file = new Blob([state.htmlContent], {type: 'text/html'});
     element.href = URL.createObjectURL(file);
     element.download = "index.html";
-    document.body.appendChild(element); // Required for this to work in FireFox
+    document.body.appendChild(element); 
     element.click();
     document.body.removeChild(element);
     addNotification('Download Started', 'Source code saved to downloads.', 'success');
@@ -262,7 +262,7 @@ const App: React.FC = () => {
         next.typingText = '';
         next.turnCount += 1;
         next.lastSpeaker = action.speaker;
-        next.pendingEvent = null; // Clear pending events as they are processed
+        next.pendingEvent = null; 
 
         if (action.action === 'wait') {
             next.consecutiveChatTurns += 1;
@@ -294,6 +294,13 @@ const App: React.FC = () => {
             if (!state.isSfxMuted) playSound('success');
             next.windows.live.isOpen = true;
             next.windows.live.zIndex = maxZ + 1;
+            
+            // AUTO-MOVE Task to DONE if Rich just updated code
+            const doingTask = next.tasks.find(t => t.status === 'doing');
+            if (doingTask) {
+                next.tasks = next.tasks.map(t => t.id === doingTask.id ? { ...t, status: 'done' } : t);
+                addNotification('Task Complete', `${doingTask.title} is now live.`, 'success');
+            }
         }
 
         if (action.action === 'add_task' && payload.title) {
@@ -312,6 +319,8 @@ const App: React.FC = () => {
             next.tasks = next.tasks.map(t => 
                 t.id === payload.taskId ? { ...t, status: payload.column as any } : t
             );
+            next.windows.board.isOpen = true;
+            next.windows.board.zIndex = maxZ + 1;
         }
 
         if (action.action === 'add_moodboard' && payload.content) {
@@ -397,7 +406,8 @@ const App: React.FC = () => {
   // --- MAIN LOOP TIMER ---
   useEffect(() => {
     if (state.isActive && !state.isPaused && !state.isThinking && !state.typingCharacter) {
-        const delay = state.turnCount === 0 ? 500 : 3500; 
+        // Fast Start, then pace it out
+        const delay = state.turnCount === 0 ? 100 : 3500; 
         timerRef.current = setTimeout(runTurn, delay);
     }
     return () => {
@@ -414,8 +424,8 @@ const App: React.FC = () => {
         const now = Date.now();
         
         // 1. Check for Stuck Thinking (API Timeout/Hang)
-        // Extended to 60s for complex code generation
-        if (startThinkingRef.current > 0 && now - startThinkingRef.current > 60000) {
+        // INCREASED TIMEOUT: 5 Minutes (300,000ms) to allow large code generation
+        if (startThinkingRef.current > 0 && now - startThinkingRef.current > 300000) {
             console.warn("Watchdog: Detected stuck thinking state. Forcing reset.");
             addNotification("System", "Agent computation timed out. Resetting...", "warning");
             setState(s => ({ ...s, isThinking: false }));

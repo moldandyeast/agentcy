@@ -1,5 +1,3 @@
-
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { AgencyState, DirectorAction, CharacterId } from "../types";
 import { CHARACTERS, INITIAL_HTML } from "../constants";
@@ -65,7 +63,7 @@ export const generateImage = async (prompt: string): Promise<string | null> => {
 // --- PROMPTS ---
 
 const BANTER_SYSTEM_INSTRUCTION = `
-You are the scriptwriter for "THE AGENCY", a workplace sitcom.
+You are the scriptwriter for "agen+cy", a workplace sitcom.
 Your goal: Generate snappy, funny, character-driven dialogue about the project.
 
 CHARACTERS:

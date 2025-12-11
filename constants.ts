@@ -1,8 +1,3 @@
-
-
-
-
-
 import { Character, WindowState, WindowId } from './types';
 
 export const CHARACTERS: Record<string, Character> = {
@@ -52,7 +47,7 @@ export const CHARACTERS: Record<string, Character> = {
     role: 'OS',
     avatar: 'https://ui-avatars.com/api/?name=System&background=000&color=fff',
     color: 'bg-gray-100 text-gray-600 border-gray-200',
-    bio: 'The Agency Operating System'
+    bio: 'agen+cy Operating System'
   }
 };
 
@@ -97,7 +92,7 @@ export const INITIAL_HTML = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Agency Workspace</title>
+    <title>agen+cy Workspace</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>

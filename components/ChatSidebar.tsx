@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { Message, CharacterId } from '../types';
 import { CHARACTERS, GIF_LIBRARY } from '../constants';
@@ -144,7 +143,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
             ) : (
                 <div className="flex items-center gap-2 select-none opacity-50 px-1">
                     <div className={`rounded-full bg-gray-400 animate-pulse ${isScaled ? 'w-2.5 h-2.5' : 'w-1.5 h-1.5'}`}></div>
-                    <span>Agency is thinking...</span>
+                    <span>agen+cy is thinking...</span>
                 </div>
             )}
         </div>

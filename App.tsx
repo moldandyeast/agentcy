@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AgencyState, Message, Task, MoodboardItem, DirectorAction, WindowId, WindowState, AppNotification } from './types';
 import { INITIAL_HTML, DEFAULT_PROMPTS, PRESET_EVENTS, INITIAL_WINDOWS, CHARACTERS } from './constants';
@@ -443,7 +440,7 @@ const App: React.FC = () => {
       if (!prompt.trim()) return;
       if (!state.isSfxMuted) playSound('success');
       if (musicEngine.current) musicEngine.current.start();
-      addNotification('System Online', 'The Agency OS is initialized and running.', 'success');
+      addNotification('System Online', 'agen+cy is initialized and running.', 'success');
 
       setState(prev => ({
           ...prev,
@@ -508,7 +505,7 @@ const App: React.FC = () => {
         {/* --- GLOBAL HEADER BAR --- */}
         <div className="absolute top-0 left-0 right-0 h-8 bg-black/20 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4 z-[9999] text-xs font-medium text-white/90">
             <div className="flex items-center gap-4">
-                <span className="font-bold tracking-tight"> The Agency OS</span>
+                <span className="font-bold tracking-tight"> agen+cy</span>
                 <span className="w-px h-3 bg-white/20"></span>
                 <span className="opacity-70">Project: {state.brief ? state.brief.slice(0, 20) + '...' : 'Untitled'}</span>
             </div>
@@ -695,7 +692,7 @@ const App: React.FC = () => {
         {showStart && (
             <div className="fixed inset-0 z-[20000] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
                 <div className="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl border border-white/20">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">The Agency OS</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">agen+cy</h1>
                     <p className="text-gray-500 mb-8">Booting up Simulation #8291...</p>
                     
                     <textarea 
@@ -718,7 +715,7 @@ const App: React.FC = () => {
                         disabled={!prompt}
                         className="w-full bg-black text-white font-medium py-4 rounded-xl hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:hover:scale-100"
                     >
-                        Initialize Agency
+                        Initialize agen+cy
                     </button>
                 </div>
             </div>
@@ -821,7 +818,7 @@ const App: React.FC = () => {
                     </div>
                     
                     <div className="bg-gray-50 p-4 border-t border-gray-200 text-center text-xs text-gray-400">
-                        Agency OS v4.1 • Simulation Active
+                        agen+cy v4.1 • Simulation Active
                     </div>
                 </div>
              </div>

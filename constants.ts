@@ -2,6 +2,7 @@
 
 
 
+
 import { Character, WindowState, WindowId } from './types';
 
 export const CHARACTERS: Record<string, Character> = {
@@ -11,7 +12,7 @@ export const CHARACTERS: Record<string, Character> = {
     role: 'Head of Product',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kevin&backgroundColor=b6e3f4&eyebrows=worried&mouth=serious',
     color: 'bg-blue-50 text-blue-700 border-blue-200',
-    bio: 'Deeply anxious about "scope creep". Speaks in corporate metaphors. Obsessed with the Kanban board. His superpower is turning a 1-sentence prompt into a detailed PRD. Always prioritizes "MVP" but secretly wants to be cool.'
+    bio: 'Deeply anxious about scope creep. Speaks in corporate metaphors. Obsessed with the Kanban board. His superpower is breaking big features into small, shippable tickets. Always focused on "What is the next immediate step?"'
   },
   ramona: {
     id: 'ramona',
@@ -19,7 +20,7 @@ export const CHARACTERS: Record<string, Character> = {
     role: 'Art Director',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ramona&backgroundColor=ffdfbf&style=circle&topType=LongHairBob&accessories=glasses',
     color: 'bg-purple-50 text-purple-700 border-purple-200',
-    bio: 'Avant-garde visionary. Hates "user friendly" if it means "ugly". Finds inspiration in brutalism, print design, and 90s anime. Will not let Rich code until the vibe is correct. Demands at least 3 mockups before a single div is rendered.'
+    bio: 'Avant-garde visionary. Hates "boring" websites. Pushes for more motion, more texture, and bolder typography. Constantly critiques Rich\'s spacing and easing curves.'
   },
   rich: {
     id: 'rich',
@@ -27,7 +28,7 @@ export const CHARACTERS: Record<string, Character> = {
     role: 'Design Engineer',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rich&backgroundColor=c0aede&facialHair=beardMajestic&topType=ShortHairDreads01',
     color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    bio: 'A God-Tier Creative Developer. 10x Engineer. Obsessed with WebGL, shaders, and frame rates. Writes code that looks like poetry. Thinks React is "too heavy" but uses it anyway. Believes a website is never finished, only abandoned. Constantly iterating.'
+    bio: 'A God-Tier Creative Developer. 10x Engineer. Obsessed with GSAP, WebGL, and 60fps performance. Thinks a website is dead if it doesn\'t have smooth scrolling. Loves to iterate and refactor code.'
   },
   nonsense: {
     id: 'nonsense',
@@ -35,7 +36,7 @@ export const CHARACTERS: Record<string, Character> = {
     role: 'Growth Hacker',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Nonsense&backgroundColor=ffdfbf&topType=WinterHat4&accessories=sunglasses',
     color: 'bg-orange-50 text-orange-700 border-orange-200',
-    bio: 'Terminally online. Obsessed with "dopamine loops" and "narrative". Speaks entirely in internet slang and crypto-bro dialiect. Writes copy that converts.'
+    bio: 'Terminally online. Obsessed with "dopamine loops" and "narrative". Wants everything to be "gamified" and "viral".'
   },
   marc: {
     id: 'marc',
@@ -98,6 +99,9 @@ export const INITIAL_HTML = `
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Agency Workspace</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.29/dist/lenis.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
         body { 

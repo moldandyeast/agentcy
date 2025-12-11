@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { AgencyState, DirectorAction, CharacterId } from "../types";
 import { CHARACTERS, INITIAL_HTML } from "../constants";
@@ -24,7 +25,6 @@ const safeParseJSON = (text: string | undefined): any => {
     }
 
     // Strategy 3: Regex Extraction (The "Leet" Fix)
-    // Extracts the outermost JSON object if surrounded by text/thoughts
     try {
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
@@ -65,44 +65,52 @@ export const generateImage = async (prompt: string): Promise<string | null> => {
 // --- PROMPTS ---
 
 const BANTER_SYSTEM_INSTRUCTION = `
-You are the scriptwriter for "THE AGENCY", a workplace sitcom about a chaotic design studio.
-Your goal: Generate snappy, funny, character-driven dialogue.
+You are the scriptwriter for "THE AGENCY", a workplace sitcom.
+Your goal: Generate snappy, funny, character-driven dialogue about the project.
 
 CHARACTERS:
-- **KEVIN (Product)**: Anxious corporate shill. Loves "alignment".
-- **RAMONA (Design)**: Pretentious artist. Hates everything.
-- **RICH (Dev)**: Arrogant genius. Condescending.
-- **MARC (Intern)**: Clueless but eager.
-- **0xNonSense**: Crypto bro.
+- **KEVIN (PM)**: Anxious. Wants updates.
+- **RAMONA (Design)**: Hates boring stuff. Wants "soul".
+- **RICH (Dev)**: Arrogant. Complains about the brief or the design.
+- **MARC (Intern)**: Just trying to help.
 
 CONTEXT:
-The team is building a website. They should be discussing the brief, the design, or the code.
-Keep it short. ONE sentence per turn usually.
+Casual banter or reaction to the current work.
+Output JSON.
 `;
 
 const WORK_SYSTEM_INSTRUCTION = `
 You are the WORLD'S BEST CREATIVE DIRECTOR AND ENGINEER.
-Your goal is to output high-quality JSON actions to build a website.
+Your goal is to output high-quality JSON actions to build a COMPLEX, AWARD-WINNING WEBSITE incrementally.
 
-ROLES:
-1. **KEVIN**: Writes the BRIEF (Markdown) or manages TASKS (Kanban).
-2. **RICH**: Writes the CODE (HTML/CSS/JS). He is a Creative Developer. He uses Tailwind, GSAP, Three.js, and advanced CSS.
-3. **RAMONA/MARC**: Generate IMAGES.
-4. **0xNonSense**: Writes "Growth Hacking" copy.
+THE TEAM & ROLES:
+1. **KEVIN (PM)**:
+   - Manages the **Kanban Board**.
+   - **CRITICAL**: If the board is empty, he ADDS new technical tasks based on the PHASE.
+   - **PHASES**:
+     - Foundation (Hero, Nav, Grid)
+     - Content (Sections, Data, Bento Grids)
+     - Motion (GSAP, ScrollTrigger, Lenis)
+     - Expansion (New Pages, Testimonials, FAQ)
+     - Interaction (Hover states, Magnetic buttons, Cursors)
+     - Experimental (WebGL, Canvas, 3D)
 
-RICH'S CODING STYLE:
-- **Single File**: All CSS/JS in index.html.
-- **Visuals**: Awwwards winning quality. Large type, smooth gradients, glassmorphism.
-- **Motion**: CSS Animations or GSAP are MANDATORY. Nothing static.
-- **Layout**: Perfect Flexbox/Grid. Responsive.
-- **Navigation**: SINGLE PAGE APP (SPA). Use anchor links (#about, #contact) for navigation. DO NOT use external links.
-- **Interactivity**: Buttons must have hover states and active JS effects (e.g. smooth scroll, modals, toggles).
+2. **RICH (Dev)**:
+   - Writes the **CODE**.
+   - **CRITICAL**: He picks a task from 'Todo', moves it to 'Doing', codes it, then moves it to 'Done'.
+   - **STACK**: Tailwind CSS (CDN), GSAP (CDN), ScrollTrigger, Lenis (Smooth Scroll), HTML5.
+   - **STYLE**: Awwwards-level. Noise textures, glassmorphism, bold typography, smooth motion.
+   - **ITERATION**: When coding, he ADDS to the existing code. He does not delete sections unless refactoring.
 
-CRITICAL:
-- You MUST ADHERE to the BRIEF provided in the context.
-- If writing code, it must match the Moodboard and Brief requirements.
-- If writing the Brief, make it detailed, professional, and clear.
-- **ITERATION**: When asked to update, ADD NEW SECTIONS (e.g., Testimonials, Pricing, FAQ) or IMPROVE VISUALS. Do not just output the same code.
+3. **RAMONA (Design)**:
+   - Generates assets (images/textures) that match specific tasks.
+
+INSTRUCTIONS:
+- **ALWAYS** check the Board State.
+- If a task is 'Doing', **FINISH IT** (Update code -> Move to Done).
+- If tasks are 'Todo', **START ONE** (Move to Doing -> Start Coding).
+- If Board is empty, **PLAN NEXT PHASE** (Add 3-4 specific technical tasks).
+- **Update Code**: When action is 'update_code', YOU MUST RETURN THE FULL HTML STRING in \`actionPayload.content\`.
 
 OUTPUT: Return valid JSON matching the schema.
 `;
@@ -115,71 +123,96 @@ const decideNextMove = (state: AgencyState): { type: 'banter' | 'work', forcedSp
         return { type: 'work', context: `URGENT EVENT: ${state.pendingEvent}. Team must react.` };
     }
 
-    // 2. Initial Setup (Brief Expansion)
-    // If the brief is short (likely just the user prompt), Kevin needs to expand it.
-    if (state.brief.length < 200) {
-        return { type: 'work', forcedSpeaker: 'kevin', context: "The current brief is just a rough idea. Kevin needs to write a full, detailed PRD/Brief in Markdown format. This is the TOP PRIORITY." };
-    }
-
-    // 3. Board Setup
-    if (state.tasks.length === 0) {
-        return { type: 'work', forcedSpeaker: 'kevin', context: "Kevin needs to populate the Kanban board with tasks based on the Brief." };
-    }
-
-    // 4. Design Phase (The Vibe Check)
-    // Rule: Rich refuses to code if there are fewer than 3 moodboard items.
-    const imageCount = state.moodboard.filter(i => i.type === 'image').length;
-    if (imageCount < 3) {
-        // If we've been chatting too long, force work.
-        if (state.consecutiveChatTurns > 1) {
-            const speaker = Math.random() > 0.5 ? 'ramona' : 'marc';
-            return { type: 'work', forcedSpeaker: speaker, context: "We need more visual assets before coding. Generate a moodboard image (mockup or inspiration) that matches the Brief." };
-        }
-        return { type: 'banter', context: "Team discusses visual direction. Ramona complains about lack of soul. They need more ideas before coding." };
-    }
-
-    // 5. Build Phase (Rich's Domain)
-    if (state.htmlContent === INITIAL_HTML) {
-        // First code pass
-        return { type: 'work', forcedSpeaker: 'rich', context: "Rich starts the project. Writes the initial skeleton code (Hero + Nav + Basic Layout) based on the Brief and Moodboard." };
-    }
-
-    // 6. Continuous Iteration (The Engine)
-    
-    // Check if there is active work to be done
     const todoTasks = state.tasks.filter(t => t.status === 'todo');
-    const inProgressTasks = state.tasks.filter(t => t.status === 'doing');
+    const doingTasks = state.tasks.filter(t => t.status === 'doing');
+    const doneTasks = state.tasks.filter(t => t.status === 'done');
+    const completedCount = doneTasks.length;
 
-    // If there is work in progress, Rich needs to finish it.
-    if (inProgressTasks.length > 0) {
-         // 70% chance to code if something is in progress
-         if (Math.random() > 0.3) {
-             return { type: 'work', forcedSpeaker: 'rich', context: `Rich needs to finish the task: "${inProgressTasks[0].title}". Update the code to implement this feature fully.` };
-         }
+    // 2. Initialization (Brief)
+    if (state.brief.length < 200) {
+        return { type: 'work', forcedSpeaker: 'kevin', context: "The brief is too short. Kevin needs to write a detailed PRD." };
     }
 
-    // If we have been chatting for a bit (lowered threshold to 2 to keep momentum), 
-    // or randomly if code is still relatively small
-    if (state.consecutiveChatTurns >= 2 || (state.htmlContent.length < 5000 && Math.random() > 0.6)) {
-        const roll = Math.random();
+    // 3. Planning (Empty Board or Phase Completion)
+    if (todoTasks.length === 0 && doingTasks.length === 0) {
+        let currentPhase = "";
+        let phaseContext = "";
+
+        // PROGRESSION LOGIC
+        if (completedCount < 3) {
+             currentPhase = "Phase 1: Foundation";
+             phaseContext = "Setup Hero Section, Navigation Bar, Responsive Grid, and Typography variables.";
+        } else if (completedCount < 6) {
+             currentPhase = "Phase 2: Core Content";
+             phaseContext = "Add 'About', 'Services', or 'Features' sections. Use bento grids. Populate with real text (no Lorem Ipsum).";
+        } else if (completedCount < 9) {
+             currentPhase = "Phase 3: Motion & Physics";
+             phaseContext = "Implement smooth scrolling (Lenis), reveal animations (GSAP ScrollTrigger), and parallax effects.";
+        } else if (completedCount < 12) {
+             currentPhase = "Phase 4: Visual Polish";
+             phaseContext = "Add noise textures, radial gradients, glassmorphism overlays, custom cursors, and refine padding/margins.";
+        } else {
+             // INFINITE ITERATION LOOP
+             const loopPhases = [
+                { name: "Phase 5: Expansion", ctx: "Add a new page section (e.g. Testimonials, FAQ, Pricing, or Blog Preview) to make the page longer and richer." },
+                { name: "Phase 6: Micro-Interactions", ctx: "Add magnetic buttons, custom tooltips, text reveal animations on hover, or interactive cards." },
+                { name: "Phase 7: Conversion", ctx: "Add a Newsletter signup, Call-to-Action buttons, or a Contact Form with validation styles." },
+                { name: "Phase 8: Experimental", ctx: "Try something weird. WebGL distortion, ASCII art footer, Marquee text, or a Konami code easter egg." }
+             ];
+             // Cycle through phases based on how many "loops" of 4 tasks we've done
+             const cycleIndex = Math.floor((completedCount - 12) / 3) % loopPhases.length;
+             const p = loopPhases[cycleIndex];
+             currentPhase = p.name;
+             phaseContext = p.ctx;
+        }
         
-        // 50% Chance: Rich adds a NEW section or feature (Continuous Iteration)
-        if (roll < 0.5) {
-            const nextFeature = todoTasks.length > 0 ? todoTasks[0].title : "New Section (Pricing or Testimonials)";
-            return { type: 'work', forcedSpeaker: 'rich', context: `The website needs more content. Rich adds a new section: "${nextFeature}" or improves the interactivity. Make sure it navigates smoothly.` };
-        }
-        // 30% Chance: Kevin manages the project
-        if (roll < 0.8) {
-             if (todoTasks.length === 0) {
-                 return { type: 'work', forcedSpeaker: 'kevin', context: "We ran out of tasks. Kevin analyzes the brief/code and adds new tickets for missing sections (e.g. Footer, Contact Form, About Us, Animations)." };
-             }
-             return { type: 'work', forcedSpeaker: 'kevin', context: "Kevin updates the board. Moves completed items to Done and selects the next Todo item." };
-        }
-        // 20% Chance: Design Polish
-        return { type: 'work', forcedSpeaker: 'ramona', context: "Ramona critiques the spacing and typography. She might generate a new texture or simply demand Rich fix the kerning." };
+        return { 
+            type: 'work', 
+            forcedSpeaker: 'kevin', 
+            context: `The board is empty. We are entering **${currentPhase}**. Kevin needs to add 3-4 specific technical tasks to the board. Context: ${phaseContext}` 
+        };
     }
 
-    // Default: Banter
+    // 4. Asset Generation (Blocker)
+    if (state.moodboard.length < 3 && completedCount < 3) {
+        return { type: 'work', forcedSpeaker: 'ramona', context: "We need more visual inspiration before we can code the foundation. Generate a high-fashion abstract asset." };
+    }
+
+    // 5. Execution Loop (The "Grind")
+    
+    // PRIORITY 1: Finish active work.
+    if (doingTasks.length > 0) {
+        const task = doingTasks[0];
+        // If we just chatted, assume we need to work.
+        // 60% chance to Code, 40% chance to Finish (Mark Done) if we've been working on it.
+        
+        if (Math.random() > 0.4) {
+             return { 
+                type: 'work', 
+                forcedSpeaker: 'rich', 
+                context: `Rich is working on the active task: "${task.title}". He needs to write/update the code to implement this feature fully. Make it look amazing (GSAP, Tailwind).` 
+            };
+        } else {
+             return { 
+                type: 'work', 
+                forcedSpeaker: 'rich', 
+                context: `Rich has finished coding the task: "${task.title}". He should announce it is done and move the task to the 'Done' column.` 
+            };
+        }
+    }
+
+    // PRIORITY 2: Pick up new work.
+    if (todoTasks.length > 0) {
+        // High probability to start work if nothing is doing
+        const task = todoTasks[0];
+        return { 
+            type: 'work', 
+            forcedSpeaker: 'rich', 
+            context: `Rich picks up the next priority task: "${task.title}". Move task ${task.id} to 'Doing' and announce he is starting.` 
+        };
+    }
+
+    // Default Fallback
     return { type: 'banter' };
 };
 
@@ -195,13 +228,13 @@ const runBanterTurn = async (state: AgencyState, context?: string): Promise<Dire
         
         CONTEXT: ${context || "Casual workspace banter about the project."}
         
-        Who speaks next? (Speaker must be one of: kevin, ramona, rich, nonsense, marc).
+        Who speaks next?
         What do they say?
         Return JSON.
     `;
 
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash', // Cheap & Fast
+        model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
             systemInstruction: BANTER_SYSTEM_INSTRUCTION,
@@ -238,23 +271,20 @@ const runWorkTurn = async (state: AgencyState, forcedSpeaker?: CharacterId, cont
 
     const prompt = `
         CURRENT STATE:
-        - Brief: ${state.brief}
-        - Tasks: ${state.tasks.map(t => `[${t.status.toUpperCase()}] ${t.title}`).join(', ')}
-        - Moodboard Items: ${state.moodboard.length}
-        - Code Length: ${state.htmlContent.length}
+        - Brief Snippet: ${state.brief.slice(0, 500)}...
+        - Tasks (KANBAN): ${state.tasks.map(t => `[${t.status.toUpperCase()}] ID:${t.id} ${t.title}`).join(', ')}
+        - Code Length: ${state.htmlContent.length} chars
         
         CONTEXT: ${context || "Progress the project."}
         REQUIRED SPEAKER: ${forcedSpeaker || "Any"}
         
         GENERATE A VALID JSON ACTION.
-        If action is 'update_code', provide FULL HTML string in actionPayload.content.
-        If action is 'generate_image', provide a descriptive prompt in actionPayload.prompt.
-        If action is 'update_brief', provide the full detailed text in actionPayload.content.
+        If 'update_code', provide FULL HTML string in actionPayload.content.
+        If 'generate_image', provide prompt.
+        If 'update_brief', provide full text.
     `;
 
     // High thinking budget for coding, medium for briefing
-    // Note: If model is failing to return JSON, budget might be consuming tokens.
-    // Adjusted budget to ensure room for output.
     const thinkingBudget = isCoding ? 4096 : (isBriefing ? 2048 : 1024);
 
     const response = await ai.models.generateContent({
@@ -309,8 +339,6 @@ const runWorkTurn = async (state: AgencyState, forcedSpeaker?: CharacterId, cont
 };
 
 const runSafeFallback = async (context: string): Promise<DirectorAction> => {
-    // A reliable fallback using the Flash model with strict constraints
-    // This ensures that even if the Pro model crashes (timeout/bad json), the app doesn't die.
     try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const response = await ai.models.generateContent({
@@ -348,7 +376,7 @@ export const generateNextTurn = async (
   audioVibe: string = "Silent"
 ): Promise<DirectorAction> => {
   
-  // 1. The Director decides the strategy
+  // 1. The Director decides the strategy based on the rigorous Kanban Loop
   const strategy = decideNextMove(state);
 
   try {
@@ -359,8 +387,6 @@ export const generateNextTurn = async (
       }
   } catch (e) {
       console.warn("Primary Turn Generation Failed. Initiating Fallback.", e);
-      // Graceful degradation: If the complex "Work" turn failed (likely due to code generation issues),
-      // fallback to a simple "Banter" or system message to keep the UI alive.
       return await runSafeFallback(strategy.context || "General error");
   }
 };
